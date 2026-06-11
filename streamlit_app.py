@@ -1,151 +1,38 @@
 import streamlit as st
-import pandas as pd
-import math
-from pathlib import Path
 
-# Set the title and favicon that appear in the Browser's tab bar.
-st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
-)
+# 1. 앱 인터페이스 및 제목 설정
+st.set_page_config(page_title="나만의 신발 제작소", page_icon="👟")
+st.title("👟 나만의 신발 제작소")
+st.write("원하는 옵션을 선택하여 나만의 신발을 완성하세요!")
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
+st.divider()
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
+# 2. 신발 색상 선택 (원본 코드의 로직 반영)
+color_list = ["선택하세요", "검정", "하양", "노랑"]
+color = st.selectbox("신발색(검정, 하양, 노랑):", color_list)
 
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
+# 3. 장식 선택 (원본 코드의 로직 반영)
+deco_list = ["선택하세요", "줄무늬", "점박이", "하트무늬"]
+deco = st.selectbox("장식(줄무늬, 점박이, 하트무늬):", deco_list)
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+# 4. 신발 종류 선택 (원본 코드의 로직 반영)
+kind_list = ["선택하세요", "운동화", "구두", "슬리퍼"]
+kind = st.selectbox("신발종류(운동화, 구두, 슬리퍼):", kind_list)
 
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
+st.divider()
 
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
-    )
-
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
-
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
-)
-
-''
-''
-
-
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
-
-st.header(f'GDP in {to_year}', divider='gray')
-
-''
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
+# 5. 모든 항목이 선택되었는지 확인 (원본의 while문/if문 조건)
+if color != "선택하세요" and deco != "선택하세요" and kind != "선택하세요":
+    # 완성 버튼
+    if st.button("신발 완성하기 ✨"):
+        st.balloons() # 축하 애니메이션
+        st.success("🎉 나만의 신발이 완성되었습니다!")
+        
+        # 최종 결과 출력 (원본의 print 내용과 동일)
+        st.subheader("[ 제작 주문서 ]")
+        st.info(f"🎨 신발색: {color}")
+        st.info(f"✨ 장식: {deco}")
+        st.info(f"👟 신발종류: {kind}")
+else:
+    # 선택이 덜 되었을 때 안내 (원본의 '다시 입력해주세요' 역할)
+    st.warning("모든 옵션을 선택해주셔야 신발을 제작할 수 있습니다.")
